@@ -27,7 +27,7 @@ So lets say an order had 4 items, 20 minimum steps.
 
 After pressing Weigh button, thickness will be set to 0.
 
-If a slicedProduct is overweight
+//If a slicedProduct is overweight
 
 !* * *Important* * *!
 the game loop must check to see if the current action is the same as the last action. We're not trying to track each slice and thickness calibration. [product, thickness, slice, weigh, ]
