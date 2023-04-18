@@ -6,6 +6,16 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface Platform {}
+		interface Game {
+			steps: string[];
+			order: ProductOrder[];
+			productNames: string[];
+			orderWeights: number[];
+			products: string[];
+			faultTolerance: number;
+			blade: string[];
+			game: Game;
+		}
 	}
 }
 
