@@ -48,5 +48,6 @@
 		transform: rotate(270deg);
 		width: 4rem;
 		margin-left: -10rem;
+		touch-action: none;
 	}
 </style>
