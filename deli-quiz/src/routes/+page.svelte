@@ -5,13 +5,12 @@
 	import { Game } from './game';
 	import GameComponent from './Game.svelte';
 
-	let { game } = new Game().game;
+	let { game } = new Game();
 
 	let inProgress:boolean;
-	$:orderItems = game.order.length
+
 	function start() {
 		game.startGame();
-		console.log(game.order.length)
 		inProgress = game.inProgress
 	}
 	
