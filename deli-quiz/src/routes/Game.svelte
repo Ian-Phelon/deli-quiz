@@ -9,7 +9,7 @@
 	// $: info = game.info;
 	let info = game.info;
 	$: onSlicer = game.slicing;
-	let slices = game.slices;
+	$:slices = game.slices;
 
 	let thickness = 0;
 

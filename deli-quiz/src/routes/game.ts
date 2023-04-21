@@ -42,6 +42,7 @@ export class Game {
 	inProgress = false;
 	slicing?: Order;
 	slices: number[] = [];
+	// info: string[] = [];
 	info = '';
 	actions = ['start', 'slice', 'weigh', 'bag'];
 
@@ -62,48 +63,53 @@ export class Game {
 	 *	set the value to be inserted into game.slices[]
 	*/
 	step(step: Step, blade: number, product?: Order) {
+		console.log('stepping', step);
 		step = step.toString();
-
 		let order = product;
+		// step was called with a product
+		this.info = 'Select Product';
 		const orderIndex = this.orderIndex(step);
-		if (orderIndex > 1) order = this.order[orderIndex];
-		if (order)
-			// If step() is called with a select-x step, it means we've selected a
-			// product. 
-			// const isOrder = (this.orderIndex(step) !== -1)
-			// 	? this.order[this.orderIndex(step)]
-			// 	: false;
-			//	begin slicing an order. select-x has not been added to steps yet if the
-			//	blade thickness is not sandwich, set this.slicing to an Order with the
-			//	new slice weight
+		if (orderIndex !== -1) { order = this.order[orderIndex]; }
+
+		if (order) {
+			this.slicing = this.onSlicer(order, blade);
+			// order = 
+
+
+
+
+			//step was not called with a product, so we have to find one
+
 			if (step.includes('select-')) {
+				this.info = `Selected`;
 				const weight = this.sliceWeight(order, blade);
 				if (typeof weight === 'string') { this.info = weight; }
 				else {
 					this.onSlicer(order, blade);
 				}
-			} else {
-
-
-				if (step === 'slice') {
-
-					this.slices.push(order.product.slice);
-					console.log('slice', this.slicing);
-				}
-				if (step === 'blade') {
-					this.onSlicer(order, blade);
-					console.log('blade', this.slicing);
-				}
 			}
-		//	think of each step ending in -ing. Many slices = one slice step, ie "the
-		//	slicing step"
+
+		}
+		if (step === 'slice' && this.slicing) {
+			this.info = `Sliced ${this.slicing.product.slice}`;
+			this.slices.push(this.slicing.product.slice);
+		}
+
+
+		if (step === 'blade' && order) {
+			this.onSlicer(order, blade);
+			console.log('blade', this.slicing);
+		}
+
+
 		if ((this.steps.length > 0) && (this.steps[this.steps.length - 1] === step)) return;
 		this.steps.push(step.toString());
 	}
 
 
 	/** 
-	 * returns a new Order with an adjusted slice weight
+	 * returns a new Order with an adjusted slice weight and sets this.slicing to
+	 * the new order
 	*/
 	onSlicer(order: Order, blade: number): Order {
 		const product = order.product;
@@ -135,15 +141,18 @@ export class Game {
 	sliceWeight(item: Order, blade: number) {
 
 		let weight;
-
+		const ok = item.product.product;
+		console.log('ok', ok);
 		switch (blade) {
 			case 0:
-				weight = 'Please Select a Slicer Setting';
-				// this.info = weight;
+				weight = 0;
 				break;
 			case 1:
 				weight = item.product.slice - .004;
 				// this.info = 'Thin Slices';
+				break;
+			case 2:
+				weight = products.filter((p) => { p.product == item.product.product; }).slice;
 				break;
 			case 3:
 				weight = item.product.slice + .004;
@@ -180,8 +189,7 @@ export class Game {
 			if (orderItem && this.order.indexOf(orderItem) === -1) { this.order.push(orderItem); }
 		}
 
-		// called with sandwich thickness to prevent any funny business
-		this.step('start', 2);
+		this.step('start', -1);
 		this.inProgress = true;
 	}
 
