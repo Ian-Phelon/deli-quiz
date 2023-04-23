@@ -8,8 +8,8 @@
 	// $: onSlicer = game.slicing;
 	// $: info = game.info;
 	let info = game.info;
-	$: onSlicer = game.slicing;
-	$:slices = game.slices;
+	let onSlicer = game.slicing;
+	let slices = game.slices;
 
 	let thickness = 0;
 
@@ -37,6 +37,10 @@
 		: ''}
 		<br />
 		Slices: {slices}
+		{#if onSlicer}
+			
+		Slices weight:{game.evaluateOrderItem(onSlicer)}
+		{/if}
 </p>
 <div class="slicer">
 	<p class="order">
