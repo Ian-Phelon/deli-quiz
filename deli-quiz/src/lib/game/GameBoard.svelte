@@ -1,26 +1,24 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import type { Game, Order } from './game';
+	import type { Game } from '$lib/game/game';
 	export let game: Game;
 
 	let steps = game.steps;
-	// $: steps = [...game.steps];
-	// $: onSlicer = game.slicing;
-	// $: info = game.info;
 	let info = game.info;
 	let onSlicer = game.slicing;
 	let slices = game.slices;
-
 	let thickness = 0;
 
 	$: bladeSetting = game.blade[thickness];
+	// function scale() { return game.scaleWeight();}
+	// const scale = () => game.scaleWeight();
+	
 
 	function step(event: Event) {
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
-		
+
 		game.step(str, thickness, onSlicer);
-		onSlicer = game.slicing
+		onSlicer = game.slicing;
 		steps = game.steps;
 		info = game.info;
 		slices = game.slices;
@@ -29,19 +27,17 @@
 
 <p class="info">
 	Steps: {steps}
-	<br />
-	Info: {info ?? ''}
-	<br />
+</p>
+<p>Info: {info ?? ''}</p>
+<p>
 	Slicing: {onSlicer
 		? `${onSlicer.productName + ' ' + onSlicer.product.product + ' ' + onSlicer.product.slice}`
 		: ''}
-		<br />
-		Slices: {slices}
-		{#if onSlicer}
-			
-		Slices weight:{game.evaluateOrderItem(onSlicer)}
-		{/if}
 </p>
+<p>Slices: {slices}</p>
+{#if onSlicer}
+	<p>{game.scaleWeight()}</p>
+{/if}
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
@@ -80,17 +76,13 @@
 		/* margin-left: -10rem; */
 		/* touch-action: none; */
 	}
-	.info {
+	p {
+		word-break: break-all;
 		word-wrap: break-word;
 	}
 	.slicer > input {
 		touch-action: none;
 	}
-	/* .showcase > button {
-		margin: 4px;
-	}
-	.slicer > button {
-	} */
 	button {
 		margin: 4px;
 	}

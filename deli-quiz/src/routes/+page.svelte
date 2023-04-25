@@ -1,24 +1,21 @@
 <script lang="ts" type="module">
-	import { tick } from 'svelte';
-	import { reduced_motion } from '../../../_sverdle/src/routes/_sverdle/reduced-motion';
-
-	import { Game } from './game';
-	import GameComponent from './Game.svelte';
+	import { Game } from '$lib/game/game';
+	import GameBoard from '$lib/game/GameBoard.svelte';
 
 	let { game } = new Game();
 
-	let inProgress:boolean;
+	let inProgress: boolean;
 
 	function start() {
 		game.startGame();
-		inProgress = game.inProgress
+		inProgress = game.inProgress;
 	}
-	
+
 	// function step(event: { currentTarget: { id: any; }; }) {
 	// 	const str = event.currentTarget.id ? event.currentTarget.id : game.steps[game.steps.length - 1];
 	// 	game.addStep(str);
 	// }
-	$:inProgress = game.steps[0] === 'start'
+	// $: inProgress = game.steps[0] === 'start';
 </script>
 
 <svelte:head>
@@ -31,13 +28,11 @@
 
 <h1 class="welcome">Deli Quiz</h1>
 <section class="game">
-
 	{#if inProgress}
-		<GameComponent {game}/>
+		<GameBoard {game} />
 	{:else}
 		<button on:click={start}>Start</button>
 	{/if}
-
 </section>
 
 <style>
@@ -52,7 +47,7 @@
 	/* h1 {
 		width: 100%;
 	} */
-/* 
+	/* 
 	.welcome {
 		display: block;
 		position: relative;
@@ -60,7 +55,7 @@
 		height: 0;
 		padding: 0 0 calc(100% * 495 / 2048) 0;
 	} */
-	.game{
+	.game {
 		margin-top: 0;
 	}
 </style>
