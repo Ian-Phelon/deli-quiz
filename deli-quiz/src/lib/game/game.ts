@@ -6,9 +6,11 @@ export class Game {
 	blade = ['closed', 'thin', 'sandwich', 'thick'];
 	game: Game;
 	inProgress = false;
-
+	win = false;
+	onScale = 0;
 	slicing?: Order;
 	slices: number[] = [];
+	waste: number[] = [];
 	info?: string;
 	warn?: string;
 	actions = ['start', 'slice', 'weigh', 'bag', 'select'];
@@ -46,28 +48,52 @@ export class Game {
 			this.slices.push(this.slicing.product.slice);
 		}
 
-		if (step === 'blade' && order) {
-			this.onSlicer(order, blade);
-		}
-		if (step === 'weigh' && order) {
-			this.info = `Weight: ${this.scaleWeight()}`;
-			// set a warning, add a step, and exit the function?
-			if (this.slices.length > 0 || !this.slicing) {
-
-				return;
+		if (step === 'blade') {
+			if (order) {
+				this.onSlicer(order, blade);
 			}
+			else {
+				this.warn = 'No Product Selected';
+			}
+			this.info = `Blade set to ${this.blade[blade]}`;
 
-			//evaluate if the slices' weight is within tolerance
-			const ok = this.withinTolerance(order.productWeight, this.scaleWeight());
-
-			this.cart.push({ order: order, description: ok.description, withinTolerance: ok.withinTolerance });
 		}
 
-		if (!order && step !== 'start') return;
+		if (step === 'weigh') {
+			this.info = `Scale: ${this.scaleWeight()}`;
+			// set a warning, add a step, and exit the function?
+			if (!this.slicing || !order) {
+				this.warn = 'Nothing sliced yet';
+			}
+			this.onScale = this.scaleWeight();
+		}
 
+		if (step === 'bag' && order) {
+			//evaluate if the slices' weight is within tolerance
+			const result = this.withinTolerance(order.productWeight, this.scaleWeight());
+			const original = this.order[orderIndex];
+
+			if (result.withinTolerance) {
+				// this.cart.push({ order: original, description: result.description, withinTolerance: result.withinTolerance });
+				this.slicing = undefined;
+				this.slices = [];
+			} else {
+				if (result.description === 'Too Much') {
+					this.warn = `${this.scaleWeight()} is more than ${original.productWeight}`;
+				}
+				//else Too Little
+				else {
+					this.warn = `${this.scaleWeight()} is less than ${original.productWeight}`;
+				}
+
+			}
+		}
+
+		// if (!order && step !== 'start') return;
 		if ((this.steps.length > 0) && (this.steps[this.steps.length - 1] === step)) return;
 
 		this.steps.push(step.toString());
+		if (this.order.length === this.cart.length) { this.info = 'Win'; this.win = true; }
 	}
 
 	onSlicer(order: Order, blade: number) {

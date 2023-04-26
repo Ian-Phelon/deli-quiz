@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { Game } from '$lib/game/game';
+	// import Slicer from './components/Slicer.svelte';
+
 	export let game: Game;
 
 	let steps = game.steps;
@@ -7,37 +9,41 @@
 	let onSlicer = game.slicing;
 	let slices = game.slices;
 	let thickness = 0;
+	$: canSlice = !onSlicer;
+	let warn = game.warn;
+	let cart = game.cart;
+
+	// $:whatever = cart.filter((val)=>{	val.order })
 
 	$: bladeSetting = game.blade[thickness];
-	// function scale() { return game.scaleWeight();}
-	// const scale = () => game.scaleWeight();
-	
-
 	function step(event: Event) {
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
-
+		console.log('something else');
 		game.step(str, thickness, onSlicer);
 		onSlicer = game.slicing;
 		steps = game.steps;
 		info = game.info;
 		slices = game.slices;
+		warn = game.warn;
+		cart = game.cart
 	}
 </script>
 
 <p class="info">
 	Steps: {steps}
 </p>
+<p>Warn: {warn ?? ''}</p>
 <p>Info: {info ?? ''}</p>
 <p>
 	Slicing: {onSlicer
 		? `${onSlicer.productName + ' ' + onSlicer.product.product + ' ' + onSlicer.product.slice}`
 		: ''}
 </p>
-<p>Slices: {slices}</p>
-{#if onSlicer}
+<p>Slices: {slices.length}</p>
+<!-- {#if onSlicer}
 	<p>{game.scaleWeight()}</p>
-{/if}
+{/if} -->
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
@@ -45,7 +51,7 @@
 			{item.product.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
-	<button id="slice" on:click={step}> slice </button>
+	<button id="slice" on:click={step} disabled={canSlice}> slice </button>
 	<button id="weigh" on:click={step}> weigh </button>
 
 	<button id="bag" on:click={step}> bag </button>
@@ -58,6 +64,7 @@
 		on:click={step}
 		on:touchend={step}
 	/>
+	<!-- <Slicer blade={thickness} game={game}/> -->
 	<p>
 		{bladeSetting}
 	</p>
