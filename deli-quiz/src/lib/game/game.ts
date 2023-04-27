@@ -20,7 +20,7 @@ export class Game {
 	];
 	orderWeights = [0.25, 0.333, 0.5, 0.666, 0.75, 1];
 	productNames = ['Two Man\'s', 'Geraldo\'s', 'Patterson\'s', 'Valley Farms'];
-	cart: FulfilledOrder[] = [];
+	cart: Order[] = [];
 
 
 	constructor() {
@@ -72,11 +72,12 @@ export class Game {
 			//evaluate if the slices' weight is within tolerance
 			const result = this.withinTolerance(order.productWeight, this.scaleWeight());
 			const original = this.order[orderIndex];
-
-			if (result.withinTolerance) {
+			///TODO:	this currently does not account for almost perfect
+			if (result.withinTolerance || result.description === 'Perfect!') {
 				// this.cart.push({ order: original, description: result.description, withinTolerance: result.withinTolerance });
 				this.slicing = undefined;
 				this.slices = [];
+				this.cart.push(order);
 			} else {
 				if (result.description === 'Too Much') {
 					this.warn = `${this.scaleWeight()} is more than ${original.productWeight}`;
@@ -87,6 +88,7 @@ export class Game {
 				}
 
 			}
+			this.info = result.description;
 		}
 
 		// if (!order && step !== 'start') return;
@@ -158,8 +160,9 @@ export class Game {
 			const s = Math.floor(Math.random() * (this.orderWeights.length));
 			const t = Math.floor(Math.random() * (this.products.length));
 			const orderItem = { productName: this.productNames[r], productWeight: this.orderWeights[s], product: this.products[t] };
-			if (orderItem && this.order.indexOf(orderItem) === -1) { this.order.push(orderItem); }
+			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem); 
 		}
+
 
 		this.step('start', -1);
 		this.inProgress = true;
@@ -182,12 +185,12 @@ interface Order {
 	product: Product;
 };
 
-interface FulfilledOrder {
-	order: Order,
-	withinTolerance: boolean,
-	description: string;
+// interface FulfilledOrder {
+// 	order: Order,
+// 	withinTolerance: boolean,
+// 	description: string;
 
-}
+// }
 
 Number.prototype.toFixed3 = function (): number {
 	return Math.round(Number(this) * 1000) / 1000;

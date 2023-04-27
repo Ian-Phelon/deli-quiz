@@ -12,7 +12,6 @@
 	$: canSlice = !onSlicer;
 	let warn = game.warn;
 	let cart = game.cart;
-
 	// $:whatever = cart.filter((val)=>{	val.order })
 
 	$: bladeSetting = game.blade[thickness];
@@ -26,15 +25,17 @@
 		info = game.info;
 		slices = game.slices;
 		warn = game.warn;
-		cart = game.cart
+		// cart = game.cart
 	}
 </script>
 
-<p class="info">
+<!-- <p class="info">
 	Steps: {steps}
-</p>
+</p> -->
+
 <p>Warn: {warn ?? ''}</p>
 <p>Info: {info ?? ''}</p>
+<p>cart: {JSON.stringify(cart[0])}</p>
 <p>
 	Slicing: {onSlicer
 		? `${onSlicer.productName + ' ' + onSlicer.product.product + ' ' + onSlicer.product.slice}`
