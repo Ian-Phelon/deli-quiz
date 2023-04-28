@@ -21,6 +21,7 @@ export class Game {
 	orderWeights = [0.25, 0.333, 0.5, 0.666, 0.75, 1];
 	productNames = ['Two Man\'s', 'Geraldo\'s', 'Patterson\'s', 'Valley Farms'];
 	cart: Order[] = [];
+	selectedIndex = 0;
 
 
 	constructor() {
@@ -36,7 +37,7 @@ export class Game {
 
 		const orderIndex = this.orderIndex(step);
 
-		if (orderIndex !== -1) { order = this.order[orderIndex]; }
+		if (orderIndex !== -1) { order = this.order[orderIndex]; this.selectedIndex = orderIndex; }
 
 		if (step.includes('select-') && order) {
 			this.info = `Selected: ${order.productName} ${order.product.product}`;
@@ -71,13 +72,14 @@ export class Game {
 		if (step === 'bag' && order) {
 			//evaluate if the slices' weight is within tolerance
 			const result = this.withinTolerance(order.productWeight, this.scaleWeight());
-			const original = this.order[orderIndex];
+			const original = this.order[this.selectedIndex];
+			console.log(original);
 			///TODO:	this currently does not account for almost perfect
 			if (result.withinTolerance || result.description === 'Perfect!') {
 				// this.cart.push({ order: original, description: result.description, withinTolerance: result.withinTolerance });
+				this.cart.push(original);
 				this.slicing = undefined;
 				this.slices = [];
-				this.cart.push(order);
 			} else {
 				if (result.description === 'Too Much') {
 					this.warn = `${this.scaleWeight()} is more than ${original.productWeight}`;
@@ -89,6 +91,7 @@ export class Game {
 
 			}
 			this.info = result.description;
+			this.winGame();
 		}
 
 		// if (!order && step !== 'start') return;
@@ -96,6 +99,11 @@ export class Game {
 
 		this.steps.push(step.toString());
 		if (this.order.length === this.cart.length) { this.info = 'Win'; this.win = true; }
+	}
+	winGame() {
+		// this.cart
+		const filterOrder = this.order.filter(x => this.cart.includes(x));
+		console.log(filterOrder, this.cart);
 	}
 
 	onSlicer(order: Order, blade: number) {
@@ -160,7 +168,7 @@ export class Game {
 			const s = Math.floor(Math.random() * (this.orderWeights.length));
 			const t = Math.floor(Math.random() * (this.products.length));
 			const orderItem = { productName: this.productNames[r], productWeight: this.orderWeights[s], product: this.products[t] };
-			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem); 
+			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem);
 		}
 
 

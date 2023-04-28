@@ -25,7 +25,7 @@
 		info = game.info;
 		slices = game.slices;
 		warn = game.warn;
-		// cart = game.cart
+		cart = game.cart
 	}
 </script>
 
