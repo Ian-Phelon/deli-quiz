@@ -5,7 +5,6 @@ export class Game {
 	faultTolerance = 0.05;
 	blade = ['closed', 'thin', 'sandwich', 'thick'];
 	game: Game;
-	inProgress = false;
 	win = false;
 	onScale = 0;
 	slicing?: Order;
@@ -26,9 +25,12 @@ export class Game {
 
 	constructor() {
 		this.game = this;
+		this.startGame()
 	}
 
+
 	step(step: Step, blade: number, order?: Order) {
+
 
 		this.warn = undefined;
 		this.info = undefined;
@@ -46,7 +48,11 @@ export class Game {
 
 		if (step === 'slice' && this.slicing) {
 			this.info = `Sliced ${this.slicing.product.slice} of ${this.slicing.product.product}`;
-			this.slices.push(this.slicing.product.slice);
+			if (this.slicing.product.slice === 0) {
+				this.warn = 'Open the Slicer Blade';
+			} else {
+				this.slices.push(this.slicing.product.slice);
+			};
 		}
 
 		if (step === 'blade') {
@@ -73,13 +79,10 @@ export class Game {
 			//evaluate if the slices' weight is within tolerance
 			const result = this.withinTolerance(order.productWeight, this.scaleWeight());
 			const original = this.order[this.selectedIndex];
-			console.log(original);
-			///TODO:	this currently does not account for almost perfect
-			if (result.withinTolerance || result.description === 'Perfect!') {
+			if (result.withinTolerance) {
 				// this.cart.push({ order: original, description: result.description, withinTolerance: result.withinTolerance });
 				this.cart.push(original);
-				this.slicing = undefined;
-				this.slices = [];
+				this.cleanSlicer();
 			} else {
 				if (result.description === 'Too Much') {
 					this.warn = `${this.scaleWeight()} is more than ${original.productWeight}`;
@@ -91,23 +94,32 @@ export class Game {
 
 			}
 			this.info = result.description;
-			this.winGame();
 		}
 
-		// if (!order && step !== 'start') return;
+		// this.order.sort((a, b) => { return this.orderSort(a, b); });
+		// this.cart.sort((a, b) => { return this.orderSort(a, b); });
+		this.winGame();
+		// no repeats
 		if ((this.steps.length > 0) && (this.steps[this.steps.length - 1] === step)) return;
 
 		this.steps.push(step.toString());
-		if (this.order.length === this.cart.length) { this.info = 'Win'; this.win = true; }
+		if (this.order.length === this.cart.length) { this.info = 'Win:endStep'; this.win = true; }
+
 	}
-	winGame() {
-		// this.cart
-		const filterOrder = this.order.filter(x => this.cart.includes(x));
-		console.log(filterOrder, this.cart);
+
+
+	winGame(customer = this.order, cart = this.cart) {
+		let check = 0;
+		customer.forEach((e) => { if (cart.includes(e)) check++; });
+		this.win = check === customer.length && customer.length === cart.length;
+	}
+	// this may need to sort by string
+	orderSort(e1: Order, e2: Order): number {
+		return e1.productWeight < e2.productWeight ? 1 : e1.productWeight > e2.productWeight ? -1 : 0;
 	}
 
 	onSlicer(order: Order, blade: number) {
-		this.slicing = undefined;
+		this.cleanSlicer();
 		const product = { ...order.product };
 
 		product.slice = this.sliceWeight(order, blade);
@@ -117,8 +129,7 @@ export class Game {
 	}
 
 	scaleWeight(): number {
-		if (this.slices.length === 0) return 0;
-		return this.slices.reduce((n, m) => n + m, 0).toFixed3();
+		return this.slices[0] ? this.slices.reduce((n, m) => n + m, 0).toFixed3() : 0;
 	}
 
 	withinTolerance(target: number, weight: number): { withinTolerance: boolean; description: string; } {
@@ -173,7 +184,13 @@ export class Game {
 
 
 		this.step('start', -1);
-		this.inProgress = true;
+	}
+
+	removeSlice() { this.slices[0] ?? this.slices.pop(); }
+
+	cleanSlicer() {
+		this.slicing = undefined;
+		this.slices = [];
 	}
 
 }

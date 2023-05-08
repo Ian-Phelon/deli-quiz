@@ -18,7 +18,6 @@
 	function step(event: Event) {
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
-		console.log('something else');
 		game.step(str, thickness, onSlicer);
 		onSlicer = game.slicing;
 		steps = game.steps;

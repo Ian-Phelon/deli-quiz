@@ -4,11 +4,10 @@
 
 	let { game } = new Game();
 
-	let inProgress: boolean;
+	let inProgress = false;
 
 	function start() {
-		game.startGame();
-		inProgress = game.inProgress;
+		inProgress = !inProgress;
 	}
 
 	// function step(event: { currentTarget: { id: any; }; }) {
