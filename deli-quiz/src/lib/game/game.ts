@@ -1,5 +1,9 @@
+import * as data from './data/index';
+
 export class Game {
 
+	productNames = data.getNames().length !== 0 ? data.getNames() : data.genericProductNames;
+	products = data.getProducts().length !== 0 ? data.getProducts() : data.genericProducts;
 	steps: string[] = [];
 	order: Order[] = [];
 	faultTolerance = 0.05;
@@ -13,19 +17,14 @@ export class Game {
 	info?: string;
 	warn?: string;
 	actions = ['start', 'slice', 'weigh', 'bag', 'select'];
-	products = [
-		{ product: 'Ham', slice: 0.05 }, { product: 'Turkey', slice: 0.05 },
-		{ product: 'Swiss', slice: 0.049 }, { product: 'Roast Beef', slice: 0.065 }, { product: 'Salami', slice: 0.025 }, { product: 'Provolone', slice: 0.036 }, { product: 'Cheddar', slice: 0.05 }, { product: 'American', slice: 0.036 },
-	];
-	orderWeights = [0.25, 0.333, 0.5, 0.666, 0.75, 1];
-	productNames = ['Two Man\'s', 'Geraldo\'s', 'Patterson\'s', 'Valley Farms'];
+	orderWeights = data.standardWeights;
 	cart: Order[] = [];
 	selectedIndex = 0;
 
 
 	constructor() {
 		this.game = this;
-		this.startGame()
+		this.startGame();
 	}
 
 
@@ -77,7 +76,7 @@ export class Game {
 
 		if (step === 'bag' && order) {
 			//evaluate if the slices' weight is within tolerance
-			const result = this.withinTolerance(order.productWeight, this.scaleWeight());
+			const result = this.withinTolerance(order.orderWeight, this.scaleWeight());
 			const original = this.order[this.selectedIndex];
 			if (result.withinTolerance) {
 				// this.cart.push({ order: original, description: result.description, withinTolerance: result.withinTolerance });
@@ -85,11 +84,11 @@ export class Game {
 				this.cleanSlicer();
 			} else {
 				if (result.description === 'Too Much') {
-					this.warn = `${this.scaleWeight()} is more than ${original.productWeight}`;
+					this.warn = `${this.scaleWeight()} is more than ${original.orderWeight}`;
 				}
 				//else Too Little
 				else {
-					this.warn = `${this.scaleWeight()} is less than ${original.productWeight}`;
+					this.warn = `${this.scaleWeight()} is less than ${original.orderWeight}`;
 				}
 
 			}
@@ -115,7 +114,7 @@ export class Game {
 	}
 	// this may need to sort by string
 	orderSort(e1: Order, e2: Order): number {
-		return e1.productWeight < e2.productWeight ? 1 : e1.productWeight > e2.productWeight ? -1 : 0;
+		return e1.orderWeight < e2.orderWeight ? 1 : e1.orderWeight > e2.orderWeight ? -1 : 0;
 	}
 
 	onSlicer(order: Order, blade: number) {
@@ -124,7 +123,7 @@ export class Game {
 
 		product.slice = this.sliceWeight(order, blade);
 
-		const newProduct = { productWeight: order.productWeight, productName: order.productName, product: product };
+		const newProduct = { orderWeight: order.orderWeight, productName: order.productName, product: product };
 		this.slicing = newProduct;
 	}
 
@@ -171,18 +170,16 @@ export class Game {
 	}
 
 	startGame() {
-		this.order = [];
+		// this.order =  this.generateOrder();
 		// one to four items
 		const amount = Math.floor(Math.random() * 4) + 1;
 		while (this.order.length < amount) {
 			const r = Math.floor(Math.random() * (this.productNames.length));
 			const s = Math.floor(Math.random() * (this.orderWeights.length));
 			const t = Math.floor(Math.random() * (this.products.length));
-			const orderItem = { productName: this.productNames[r], productWeight: this.orderWeights[s], product: this.products[t] };
+			const orderItem = { productName: this.productNames[r], orderWeight: this.orderWeights[s], product: this.products[t] };
 			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem);
 		}
-
-
 		this.step('start', -1);
 	}
 
@@ -192,6 +189,24 @@ export class Game {
 		this.slicing = undefined;
 		this.slices = [];
 	}
+
+	generateOrder(orderWeights = data.standardWeights,
+		productNames = data.getNames().length !== 0 ? data.getNames() : data.genericProductNames,
+		products = data.getProducts().length !== 0 ? data.getProducts() : data.genericProducts,
+		max = 4) {
+		const order: Order[] = [];
+		const amount = Math.floor(Math.random() * max) + 1;
+		while (order.length < amount) {
+			const r = Math.floor(Math.random() * (productNames.length));
+			const s = Math.floor(Math.random() * (orderWeights.length));
+			const t = Math.floor(Math.random() * (products.length));
+			const orderItem = { productName: productNames[r], orderWeight: orderWeights[s], product: products[t] };
+			if (order.findIndex((e) => { e.product.product === orderItem.product.product; }) === -1) continue;
+			if (order.indexOf(orderItem) === -1) order.push(orderItem);
+		}
+		return order;
+	}
+
 
 }
 
@@ -205,7 +220,7 @@ interface Product {
 };
 
 interface Order {
-	productWeight: number;
+	orderWeight: number;
 	productName: string;
 	product: Product;
 };
@@ -220,3 +235,24 @@ interface Order {
 Number.prototype.toFixed3 = function (): number {
 	return Math.round(Number(this) * 1000) / 1000;
 };
+
+class OrderGenerator {
+	orderWeights = data.standardWeights;
+	productNames = data.getNames()[0] ? data.getNames() : data.genericProductNames;
+	products = data.getProducts()[0] ? data.getProducts() : data.genericProducts;
+	order: Order[] = [];
+	//one to four items, call with a different maximum amount to change
+	generateOrder(max = 4) {
+		this.order = [];
+		const amount = Math.floor(Math.random() * max) + 1;
+		while (this.order.length < amount) {
+			const r = Math.floor(Math.random() * (this.productNames.length));
+			const s = Math.floor(Math.random() * (this.orderWeights.length));
+			const t = Math.floor(Math.random() * (this.products.length));
+			const orderItem = { productName: this.productNames[r], orderWeight: this.orderWeights[s], product: this.products[t] };
+			if (this.order.findIndex((e) => { e.product.product === orderItem.product.product; })) continue;
+			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem);
+		}
+		return this.order;
+	}
+}

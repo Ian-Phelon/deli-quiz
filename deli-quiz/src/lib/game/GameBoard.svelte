@@ -24,7 +24,7 @@
 		info = game.info;
 		slices = game.slices;
 		warn = game.warn;
-		cart = game.cart
+		cart = game.cart;
 	}
 </script>
 
@@ -47,7 +47,7 @@
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
-			<b>{item.productWeight}</b> of {item.productName}
+			<b>{item.orderWeight}</b> of {item.productName}
 			{item.product.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
