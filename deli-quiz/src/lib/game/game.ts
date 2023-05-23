@@ -2,13 +2,13 @@ import * as data from './data/index';
 
 export class Game {
 
-	productNames = data.getNames().length !== 0 ? data.getNames() : data.genericProductNames;
-	products = data.getProducts().length !== 0 ? data.getProducts() : data.genericProducts;
+	productNames: string[];
+	products: Product[];
 	steps: string[] = [];
 	order: Order[] = [];
 	faultTolerance = 0.05;
 	blade = ['closed', 'thin', 'sandwich', 'thick'];
-	game: Game;
+	// game: Game;
 	win = false;
 	onScale = 0;
 	slicing?: Order;
@@ -17,13 +17,16 @@ export class Game {
 	info?: string;
 	warn?: string;
 	actions = ['start', 'slice', 'weigh', 'bag', 'select'];
-	orderWeights = data.standardWeights;
+	orderWeights: number[];
 	cart: Order[] = [];
 	selectedIndex = 0;
 
 
-	constructor() {
-		this.game = this;
+	constructor(orderData: OrderData) {
+		this.products = orderData.products;
+		this.productNames = orderData.productNames;
+		this.orderWeights = orderData.orderWeights;
+		// this.game = this;
 		this.startGame();
 	}
 
@@ -183,6 +186,8 @@ export class Game {
 		this.step('start', -1);
 	}
 
+
+
 	removeSlice() { this.slices[0] ?? this.slices.pop(); }
 
 	cleanSlicer() {
@@ -225,34 +230,14 @@ interface Order {
 	product: Product;
 };
 
-// interface FulfilledOrder {
-// 	order: Order,
-// 	withinTolerance: boolean,
-// 	description: string;
 
-// }
 
 Number.prototype.toFixed3 = function (): number {
 	return Math.round(Number(this) * 1000) / 1000;
 };
 
-class OrderGenerator {
-	orderWeights = data.standardWeights;
-	productNames = data.getNames()[0] ? data.getNames() : data.genericProductNames;
-	products = data.getProducts()[0] ? data.getProducts() : data.genericProducts;
-	order: Order[] = [];
-	//one to four items, call with a different maximum amount to change
-	generateOrder(max = 4) {
-		this.order = [];
-		const amount = Math.floor(Math.random() * max) + 1;
-		while (this.order.length < amount) {
-			const r = Math.floor(Math.random() * (this.productNames.length));
-			const s = Math.floor(Math.random() * (this.orderWeights.length));
-			const t = Math.floor(Math.random() * (this.products.length));
-			const orderItem = { productName: this.productNames[r], orderWeight: this.orderWeights[s], product: this.products[t] };
-			if (this.order.findIndex((e) => { e.product.product === orderItem.product.product; })) continue;
-			if (this.order.indexOf(orderItem) === -1) this.order.push(orderItem);
-		}
-		return this.order;
-	}
+export interface OrderData {
+	products: Product[];
+	productNames: string[];
+	orderWeights: number[];
 }

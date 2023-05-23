@@ -1,8 +1,17 @@
 <script lang="ts" type="module">
-	import { Game } from '$lib/game/game';
+	import { Game, type OrderData } from '$lib/game/game';
 	import GameBoard from '$lib/game/GameBoard.svelte';
+	import * as gameData from '$lib/game/data/index';
 
-	let { game } = new Game();
+	const { genericProducts, genericProductNames, standardWeights } = gameData;
+
+	const ok: OrderData = {
+		products: genericProducts,
+		productNames: genericProductNames,
+		orderWeights: standardWeights
+	};
+
+	let  game  = new Game(ok);
 
 	let inProgress = false;
 
