@@ -1,4 +1,10 @@
 Ok Ian, you've set out to make a deli slicer application. The goal is to create a "game" of trying to slice cold cuts for a customer. It will mimic real life conditions such as setting a slicer thickness, counting individual slices, fulfilling customer orders, and varying product weights with visual approximations.
+---
+
+# HeadlineTemplate
+
+---
+
 
 ---
 
@@ -42,3 +48,31 @@ the game loop must check to see if the current action is the same as the last ac
 - Slicer Thickness
   - a slider from 0 to 2. _What are the increments in?_ incremental markers on the side, snap to increments
 * Slice
+
+---
+
+# Game Class
+
+---
+
+Steps
+- Start
+  * generates the order 
+  * add step start
+- Select
+  * sets onSlicer:Product
+  * add step select-x
+- Blade
+  * setBlade(x = 0) that takes a number, sets blade to that number
+  * add step blade
+- Slice
+  * takes a product and a blade, pushes to slices[] if > 0.
+  * this is where we "make a new product" to not mutate the order array
+  * add step slice
+- Weigh
+  * just add weigh step, scale is scale
+- Bag
+  * if not enough, do nothing.
+  * if too much, reduce slices[] and push to waste[]
+  * add bag step
+  * win()

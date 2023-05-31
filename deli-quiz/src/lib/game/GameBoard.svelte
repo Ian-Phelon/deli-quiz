@@ -1,49 +1,48 @@
 <script lang="ts">
-	import type { Game } from '$lib/game/game';
-	// import Slicer from './components/Slicer.svelte';
+	import type { Game, Order } from '$lib/game/game';
 
 	export let game: Game;
 
-	let steps = game.steps;
-	let info = game.info;
-	let onSlicer = game.slicing;
+	let onSlicerIndex = 0;
 	let slices = game.slices;
-	let thickness = 0;
-	$: canSlice = !onSlicer;
-	let warn = game.warn;
-	let cart = game.cart;
-	// $:whatever = cart.filter((val)=>{	val.order })
+	let blade = 0;
 
-	$: bladeSetting = game.blade[thickness];
+
+	$: onSlicer = game.order[onSlicerIndex];
+	$: canSlice = game.slicingIndex !== undefined;
+	$: bladeSetting = game.bladeSetting[blade];
+	let ok = false;
+
+	function select(event: Event) {
+		//@ts-expect-error always called with an event
+		const str = event.currentTarget.id;
+		onSlicerIndex = +str.split('-')[1];
+		game.setSlicingIndex(onSlicerIndex);
+		// console.log(game.slicingIndex, onSlicerIndex);
+	}
+
+	function slice() {
+		game.iSlice(blade);
+	}
+
+	function setBlade(){
+		game.adjustBlade(blade)
+	}
+
 	function step(event: Event) {
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
-		game.step(str, thickness, onSlicer);
-		onSlicer = game.slicing;
-		steps = game.steps;
-		info = game.info;
 		slices = game.slices;
-		warn = game.warn;
-		cart = game.cart;
 	}
 </script>
 
-<!-- <p class="info">
-	Steps: {steps}
-</p> -->
-
-<p>Warn: {warn ?? ''}</p>
-<p>Info: {info ?? ''}</p>
-<p>cart: {JSON.stringify(cart[0])}</p>
-<p>
+<!-- <p>
 	Slicing: {onSlicer
 		? `${onSlicer.productName + ' ' + onSlicer.product.product + ' ' + onSlicer.product.slice}`
 		: ''}
 </p>
 <p>Slices: {slices.length}</p>
-<!-- {#if onSlicer}
-	<p>{game.scaleWeight()}</p>
-{/if} -->
+<p>Scale: {game.onScale}</p> -->
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
@@ -51,27 +50,28 @@
 			{item.product.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
-	<button id="slice" on:click={step} disabled={canSlice}> slice </button>
+	<button id="slice" on:click={slice} disabled={ok}> slice </button>
 	<button id="weigh" on:click={step}> weigh </button>
-
 	<button id="bag" on:click={step}> bag </button>
 	<input
 		id="blade"
 		type="range"
 		min="0"
-		max={game.blade.length - 1}
-		bind:value={thickness}
-		on:click={step}
-		on:touchend={step}
+		max={game.bladeSetting.length - 1}
+		bind:value={blade}
+		on:click={setBlade}
+		on:touchend={setBlade}
 	/>
-	<!-- <Slicer blade={thickness} game={game}/> -->
+	<!-- <Slicer blade={blade} game={game}/> -->
 	<p>
 		{bladeSetting}
 	</p>
 </div>
 <div class="showcase">
 	{#each game.order as item, i}
-		<button id="select-{i}" on:click={step}>{item.productName + ' ' + item.product.product}</button>
+		<button id="select-{i}" on:click={select}
+			>{item.productName + ' ' + item.product.product}</button
+		>
 	{/each}
 </div>
 

@@ -2,21 +2,26 @@
 	import { Game, type OrderData } from '$lib/game/game';
 	import GameBoard from '$lib/game/GameBoard.svelte';
 	import * as gameData from '$lib/game/data/index';
+	import { confetti } from '@neoconfetti/svelte';
 
 	const { genericProducts, genericProductNames, standardWeights } = gameData;
 
 	const ok: OrderData = {
 		products: genericProducts,
 		productNames: genericProductNames,
-		orderWeights: standardWeights
+		orderWeights: standardWeights,
+		faultTolerance: 0.5
 	};
 
-	let  game  = new Game(ok);
+	let game = new Game(ok);
 
 	let inProgress = false;
+	let win = game.win;
+	$: winning = () => game.win;
 
 	function start() {
 		inProgress = !inProgress;
+		// win = true;
 	}
 
 	// function step(event: { currentTarget: { id: any; }; }) {
@@ -37,6 +42,11 @@
 <h1 class="welcome">Deli Quiz</h1>
 <section class="game">
 	{#if inProgress}
+		{#if winning()}
+			<div>
+				<div use:confetti />
+			</div>
+		{/if}
 		<GameBoard {game} />
 	{:else}
 		<button on:click={start}>Start</button>
