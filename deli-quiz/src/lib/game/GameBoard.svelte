@@ -5,14 +5,14 @@
 
 	export let game: Game;
 
-	let onSlicerIndex = 0;
-	let slices = game.slices;
+	let slicingIndex = 0;
+	let slices = 0;
 	let blade = 0;
+	let scale = 0;
 	let order = game.slicing;
-	let scale = game.scaleWeight();
 
 	let winning = false;
-	$: onSlicer = game.order[onSlicerIndex];
+	$: slicing = game.order[slicingIndex];
 	$: canSlice = !order;
 	$: bladeSetting = game.bladeSetting[blade];
 	let ok = false;
@@ -21,32 +21,31 @@
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
 		const index = +str.split('-')[1];
-		game.setSlicingIndex(index);
+		game.select(index);
 		order = game.slicing;
-		onSlicerIndex = index;
+		slicingIndex = index;
 	}
 
 	function slice() {
 		game.slice(blade);
+		slices = game.slices.length;
 	}
 
 	function setBlade() {
-		game.adjustBlade(blade);
+		game.setBlade(blade);
 	}
 
-	function bag() {
-		game.iBag(onSlicerIndex);
+	async function bag() {
+		game.bag(slicingIndex);
+		winning = false;
+		await tick();
+		winning = game.order.length === game.cart.length;
 	}
 
 	function weigh() {
-		game.iWeigh();
+		game.weigh();
+		scale = game.scaleWeight();
 	}
-
-	// function step(event: Event) {
-	// 	//@ts-expect-error always called with an event
-	// 	const str = event.currentTarget.id;
-	// 	slices = game.slices;
-	// }
 </script>
 
 {#if winning}
@@ -55,12 +54,10 @@
 	</div>
 {/if}
 <p>
-	Splicing: {order
-		? `${order.productName + ' ' + order.product.product + ' ' + order.product.slice}`
-		: ''}
+	Slicing: {order ? `${order.productName + ' ' + order.product.product}` : ''}
 </p>
-<p>Slices: {slices.length}</p>
-<p>Scale: {game.scaleWeight()}</p>
+<p>Slices: {slices}</p>
+<p>Scale: {scale}</p>
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
@@ -68,27 +65,9 @@
 			{item.product.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
-	<button
-		id="slice"
-		on:click={() => {
-			game.slice(blade);
-		}}
-		disabled={canSlice}
-	>
-		slice
-	</button>
+	<button id="slice" on:click={slice} disabled={canSlice}> slice </button>
 	<button id="weigh" on:click={weigh}> weigh </button>
-	<button
-		id="bag"
-		on:click={async () => {
-			game.iBag(onSlicerIndex);
-			winning = false;
-			await tick();
-			winning = game.order.length === game.cart.length;
-		}}
-	>
-		bag
-	</button>
+	<button id="bag" on:click={bag}> bag </button>
 	<input
 		id="blade"
 		type="range"
@@ -133,7 +112,6 @@
 		overflow: hidden;
 	}
 	.confetti {
-		
 		/* width: 100%;
 		height: 100%; */
 		/* overflow: hidden; */
