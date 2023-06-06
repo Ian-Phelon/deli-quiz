@@ -5,23 +5,21 @@ export class Game {
 	orderWeights: number[];
 	steps: string[] = [];
 	order: Order[] = [];
-	faultTolerance = 0.05;
+	faultTolerance: number;
 	bladeSetting = ['closed', 'thin', 'sandwich', 'thick'];
 	blade = 0;
-	slicing?: Order;
-	slicingIndex?: number;
 	slices: number[] = [];
 	waste: number[] = [];
 	cart: Order[] = [];
+	// showcase: Product[];
 
 
 	constructor(orderData: OrderData) {
 		this.products = orderData.products;
 		this.productNames = orderData.productNames;
 		this.orderWeights = orderData.orderWeights;
-		if (orderData.faultTolerance) {
-			this.faultTolerance = orderData.faultTolerance;
-		}
+		this.faultTolerance = orderData.faultTolerance;
+
 		this.generateOrder();
 	}
 
@@ -32,9 +30,7 @@ export class Game {
 		this.steps.push(step.toString());
 	}
 
-	select(index: number) {
-		this.slicingIndex = index;
-		this.slicing = this.getOrderByIndex(index);
+	select() {
 		this.step('select');
 	}
 
@@ -43,11 +39,11 @@ export class Game {
 		this.step('blade');
 	}
 
-	slice(blade = this.blade, index = this.slicingIndex) {
+	slice(blade: number, index: number) {
 
-		if (blade === 0 || typeof index === 'undefined') return;
+		if (blade === 0) return;
 
-		const order = this.getOrderByIndex(index);
+		const order = this.getOrder(index);
 		const base = order.product.slice;
 		let weight = 0;
 
@@ -68,34 +64,46 @@ export class Game {
 		this.step('weigh');
 	}
 
-	bag(index:number) {
-		const order = { ...this.getOrderByIndex(index) };
+	bag(index: number) {
+		const order = { ...this.getOrder(index) };
 		const target = order.orderWeight;
 		const actual = this.scaleWeight();
+
+		this.step('bag');
+
+		// if (!this.withinTolerance(target, actual)|| actual > target) {
+
+		// }
 
 		if (this.withinTolerance(target, actual)) {
 			const fulfilled = { ...order, orderWeight: actual };
 			this.cart.push(fulfilled);
 			this.cleanSlicer();
-		} 
+		} else {
+			return false;
+		}
 
-		this.step('bag');
+		return true;
 	}
 
-	scaleWeight(): number {
-		return this.slices.reduce((n, m) => n + m, 0).toFixed3();
+	scaleWeight(slices = this.slices): number {
+		return slices.reduce((n, m) => n + m, 0).toFixed3();
 	}
 
-	withinTolerance(target = 99, actual = 0) {
+	withinTolerance(orderWeight: number | undefined, actual: number | undefined) {
+		if (!orderWeight || !actual || actual === 0) return false;
+
+		const target = orderWeight;
 		const upper = (target + this.faultTolerance).toFixed3();
 		const lower = (target - this.faultTolerance).toFixed3();
 
 		return actual <= upper && actual >= lower;
 	}
 
+	// generateOrder(showcase: Product[],) {
 	generateOrder() {
 		// one to four items
-		const amount = Math.floor(Math.random() * 4) + 1;
+		const amount = rng(4);
 
 		while (this.order.length < amount) {
 			const r = Math.floor(Math.random() * (this.productNames.length));
@@ -114,18 +122,27 @@ export class Game {
 			if (!duplicate) this.order.push(orderItem);
 		}
 
-		this.step('start');
+		this.step('order');
 	}
 
-	removeSlice(slices = this.slices) { slices[0] ?? slices.pop(); }
+	excessToWaste(slices: number[], target: number) {
+		let weight = this.scaleWeight(slices);
+
+		while (!this.withinTolerance(target, weight)) {
+			if (weight <= target) { break; }
+			const slice = slices.pop() ?? 0;
+			weight = this.scaleWeight(slices);
+			this.waste.push(slice);
+		}
+		this.step('waste');
+		return slices;
+	}
 
 	cleanSlicer() {
-		this.slicing = undefined;
-		this.slicingIndex = undefined;
 		this.slices = [];
 	}
 
-	getOrderByIndex(index: number) {
+	getOrder(index: number) {
 		return this.order[index];
 	}
 
@@ -156,3 +173,5 @@ export interface OrderData {
 	orderWeights: number[];
 	faultTolerance: number;
 }
+
+export const rng = (max = 1) => Math.floor(Math.random() * max) + 1;

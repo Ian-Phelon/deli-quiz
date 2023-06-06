@@ -9,11 +9,20 @@
 	let slices = 0;
 	let blade = 0;
 	let scale = 0;
-	let order = game.slicing;
-
+	let order: Order;
+	// let canBag = true;
+	let hi = '';
+	/* 
+	It's the clients job to say that scale is not enough to bag. It's ok if it's over because bag() will just throw away extra slices in the ends bin. Because we're also tying it to the disabled={value}, everything is celebrating opposite day. so, split it up into something? bagAble?
+*/
+	const fuckMe = (order: number, scale: number) =>
+		game.withinTolerance(game.getOrder(order).orderWeight, scale) &&
+		game.getOrder(order).orderWeight < scale;
 	let winning = false;
 	$: slicing = game.order[slicingIndex];
 	$: canSlice = !order;
+	$: canBag = !game.withinTolerance(order?.orderWeight, scale);
+	// $: canBag = !fuckMe(slicingIndex, scale)
 	$: bladeSetting = game.bladeSetting[blade];
 	let ok = false;
 
@@ -21,13 +30,13 @@
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
 		const index = +str.split('-')[1];
-		game.select(index);
-		order = game.slicing;
+		game.select();
 		slicingIndex = index;
+		order = game.order[slicingIndex];
 	}
 
 	function slice() {
-		game.slice(blade);
+		game.slice(blade, slicingIndex);
 		slices = game.slices.length;
 	}
 
@@ -36,8 +45,9 @@
 	}
 
 	async function bag() {
-		game.bag(slicingIndex);
+		const bagged = game.bag(slicingIndex);
 		winning = false;
+
 		await tick();
 		winning = game.order.length === game.cart.length;
 	}
@@ -67,7 +77,19 @@
 	</p>
 	<button id="slice" on:click={slice} disabled={canSlice}> slice </button>
 	<button id="weigh" on:click={weigh}> weigh </button>
-	<button id="bag" on:click={bag}> bag </button>
+	<button
+		id="bag"
+		disabled={canBag}
+		on:click={async () => {
+			const withinTolerance = game.withinTolerance(order?.orderWeight, game.scaleWeight());
+			if (withinTolerance) {
+				await bag();
+				// return;
+			}
+		}}
+	>
+		bag
+	</button>
 	<input
 		id="blade"
 		type="range"
@@ -88,6 +110,14 @@
 			>{item.productName + ' ' + item.product.product}</button
 		>
 	{/each}
+</div>
+<div>
+	<p>{hi}</p>
+	<button
+		on:click={() => {
+			hi = game.withinTolerance(order?.orderWeight, scale).toString();
+		}}>hi</button
+	>
 </div>
 
 <style>

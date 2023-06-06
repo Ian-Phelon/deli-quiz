@@ -10,7 +10,7 @@
 		products: genericProducts,
 		productNames: genericProductNames,
 		orderWeights: standardWeights,
-		faultTolerance: 0.5
+		faultTolerance: 0.05
 	};
 
 	let game = new Game(ok);
