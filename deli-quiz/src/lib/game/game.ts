@@ -1,6 +1,7 @@
 export class Game {
 
 	products: Product[];
+	showcase: Product[] = [];
 	productNames: string[];
 	orderWeights: number[];
 	steps: string[] = [];
@@ -76,8 +77,13 @@ export class Game {
 		// }
 
 		if (this.withinTolerance(target, actual)) {
+			console.log('fuckerA');
 			const fulfilled = { ...order, orderWeight: actual };
+			if (this.cart.includes(fulfilled)) {
+				console.log('fuckerB');
+			}
 			this.cart.push(fulfilled);
+			console.log('fuckerC');
 			this.cleanSlicer();
 		} else {
 			return false;
@@ -103,12 +109,20 @@ export class Game {
 	// generateOrder(showcase: Product[],) {
 	generateOrder() {
 		// one to four items
-		const amount = rng(4);
+		const amount = rng(4, 1);
+		const stock = amount * 2;
+		const showcase = [];
+
+
+		//if we assign a customer id to a product, we can add it to the showcase
+		//with that id instead of the product id. i think we should change the
+		//string input on the front end to a number, and make the customer id a
+		//string. maybe something like 'customer' lol
 
 		while (this.order.length < amount) {
-			const r = Math.floor(Math.random() * (this.productNames.length));
-			const s = Math.floor(Math.random() * (this.orderWeights.length));
-			const t = Math.floor(Math.random() * (this.products.length));
+			const r = rng(this.productNames.length);
+			const s = rng(this.orderWeights.length);
+			const t = rng(this.products.length);
 
 			const orderItem = { productName: this.productNames[r], orderWeight: this.orderWeights[s], product: this.products[t] };
 
@@ -121,6 +135,8 @@ export class Game {
 
 			if (!duplicate) this.order.push(orderItem);
 		}
+
+
 
 		this.step('order');
 	}
@@ -143,6 +159,7 @@ export class Game {
 	}
 
 	getOrder(index: number) {
+		// this.order.find((e) => { e.});
 		return this.order[index];
 	}
 
@@ -154,6 +171,7 @@ export interface Product {
 	producer?: string;
 	product: string;
 	slice: number;
+	id?: string | number;
 	variants?: Product[];
 };
 
@@ -161,6 +179,7 @@ export interface Order {
 	orderWeight: number;
 	productName: string;
 	product: Product;
+	//product id instead of name and such?
 };
 
 Number.prototype.toFixed3 = function (): number {
@@ -173,5 +192,21 @@ export interface OrderData {
 	orderWeights: number[];
 	faultTolerance: number;
 }
+/**
+ * @param max = 1
+ * @param min = 0
+ * @returns {number} A single digit number, max and min inclusive
+ * 
+ */
+export function rng(max = 1, min = 0): number {
+	return Math.floor(Math.random() * max) + min;
+}
 
-export const rng = (max = 1) => Math.floor(Math.random() * max) + 1;
+// function showcase(order: Order[], products:Product[]): Product[] {
+// 	const stock = order.length * 2;
+// 	const names=[];
+// 	order.forEach((e) => { names.push(e.productName); });
+
+
+// 	return [];
+// }

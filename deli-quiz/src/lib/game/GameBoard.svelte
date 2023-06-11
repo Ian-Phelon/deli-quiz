@@ -6,29 +6,21 @@
 	export let game: Game;
 
 	let slicingIndex = 0;
+	//let productId=0
 	let slices = 0;
 	let blade = 0;
 	let scale = 0;
 	let order: Order;
-	// let canBag = true;
-	let hi = '';
-	/* 
-	It's the clients job to say that scale is not enough to bag. It's ok if it's over because bag() will just throw away extra slices in the ends bin. Because we're also tying it to the disabled={value}, everything is celebrating opposite day. so, split it up into something? bagAble?
-*/
-	const fuckMe = (order: number, scale: number) =>
-		game.withinTolerance(game.getOrder(order).orderWeight, scale) &&
-		game.getOrder(order).orderWeight < scale;
 	let winning = false;
-	$: slicing = game.order[slicingIndex];
+	// $: slicing = game.order[slicingIndex];
 	$: canSlice = !order;
-	$: canBag = !game.withinTolerance(order?.orderWeight, scale);
-	// $: canBag = !fuckMe(slicingIndex, scale)
+	$: canBag = scale > game.getOrder(slicingIndex).orderWeight || !game.withinTolerance(order?.orderWeight, scale);
 	$: bladeSetting = game.bladeSetting[blade];
-	let ok = false;
 
 	function select(event: Event) {
 		//@ts-expect-error always called with an event
 		const str = event.currentTarget.id;
+		//
 		const index = +str.split('-')[1];
 		game.select();
 		slicingIndex = index;
@@ -45,8 +37,14 @@
 	}
 
 	async function bag() {
-		const bagged = game.bag(slicingIndex);
 		winning = false;
+		const withinTolerance = game.withinTolerance(order?.orderWeight, game.scaleWeight());
+		if (withinTolerance) {
+			const bagged = game.bag(slicingIndex);
+			if (!bagged) {
+				console.log('oopsies');
+			}
+		}
 
 		await tick();
 		winning = game.order.length === game.cart.length;
@@ -77,19 +75,7 @@
 	</p>
 	<button id="slice" on:click={slice} disabled={canSlice}> slice </button>
 	<button id="weigh" on:click={weigh}> weigh </button>
-	<button
-		id="bag"
-		disabled={canBag}
-		on:click={async () => {
-			const withinTolerance = game.withinTolerance(order?.orderWeight, game.scaleWeight());
-			if (withinTolerance) {
-				await bag();
-				// return;
-			}
-		}}
-	>
-		bag
-	</button>
+	<button id="bag" disabled={canBag} on:click={bag}> bag </button>
 	<input
 		id="blade"
 		type="range"
@@ -111,22 +97,11 @@
 		>
 	{/each}
 </div>
-<div>
-	<p>{hi}</p>
-	<button
-		on:click={() => {
-			hi = game.withinTolerance(order?.orderWeight, scale).toString();
-		}}>hi</button
-	>
-</div>
 
 <style>
 	#blade {
-		/* rotation causes us to manipulate the height by changing the width */
-		transform: rotate(270deg);
 		width: 4rem;
-		/* margin-left: -10rem; */
-		/* touch-action: none; */
+		transform: rotate(270deg);
 	}
 	p {
 		word-break: break-all;

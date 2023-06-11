@@ -1,22 +1,33 @@
 <script lang="ts" type="module">
-	import { Game, type OrderData } from '$lib/game/game';
+	import { Game, type OrderData, type Product } from '$lib/game/game';
 	import GameBoard from '$lib/game/GameBoard.svelte';
-	import * as gameData from '$lib/game/data/index';
-	
+	import * as getData from '$lib/game/data/index';
 
-	const { genericProducts, genericProductNames, standardWeights } = gameData;
+	const { genericProducts, genericProductNames, standardWeights } = getData;
 
-	const ok: OrderData = {
-		products: genericProducts,
-		productNames: genericProductNames,
-		orderWeights: standardWeights,
-		faultTolerance: 0.05
-	};
+	function genericData(
+		products = genericProducts,
+		names = genericProductNames,
+		weights = standardWeights
+	) {
+		const generic: Product[] = [];
+		products.forEach((e, i) => {
+			generic.push({ ...e, id: `${i}` });
+		});
+		return {
+			// id: 'generic',
+			products: generic,
+			productNames: names,
+			orderWeights: weights,
+			faultTolerance: 0.05
+		};
+	}
 
-	let game = new Game(ok);
+	const gameData = genericData();
+
+	let game = new Game(gameData);
 
 	let inProgress = false;
-	
 
 	function start() {
 		inProgress = !inProgress;
