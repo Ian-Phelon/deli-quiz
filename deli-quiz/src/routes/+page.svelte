@@ -12,7 +12,7 @@
 	) {
 		const generic: Product[] = [];
 		products.forEach((e, i) => {
-			generic.push({ ...e, id: `${i}` });
+			generic.push({ ...e, id: i });
 		});
 		return {
 			// id: 'generic',

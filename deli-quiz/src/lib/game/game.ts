@@ -1,7 +1,7 @@
 export class Game {
 
 	products: Product[];
-	showcase: Product[] = [];
+	showcase: Order[] = [];
 	productNames: string[];
 	orderWeights: number[];
 	steps: string[] = [];
@@ -45,7 +45,7 @@ export class Game {
 		if (blade === 0) return;
 
 		const order = this.getOrder(index);
-		const base = order.product.slice;
+		const base = order.slice;
 		let weight = 0;
 
 		if (blade === -1) { weight = base; }
@@ -67,7 +67,7 @@ export class Game {
 
 	bag(index: number) {
 		const order = { ...this.getOrder(index) };
-		const target = order.orderWeight;
+		const target = order.weight;
 		const actual = this.scaleWeight();
 
 		this.step('bag');
@@ -111,29 +111,21 @@ export class Game {
 		// one to four items
 		const amount = rng(4, 1);
 		const stock = amount * 2;
-		const showcase = [];
+		// const showcase = [];
 
 
-		//if we assign a customer id to a product, we can add it to the showcase
-		//with that id instead of the product id. i think we should change the
-		//string input on the front end to a number, and make the customer id a
-		//string. maybe something like 'customer' lol
-
-		while (this.order.length < amount) {
+		while (this.showcase.length < stock) {
 			const r = rng(this.productNames.length);
-			const s = rng(this.orderWeights.length);
+			// const s = rng(this.orderWeights.length);
 			const t = rng(this.products.length);
 
-			const orderItem = { productName: this.productNames[r], orderWeight: this.orderWeights[s], product: this.products[t] };
+			const orderItem = { producer: this.productNames[r], ...this.products[t], weight: 0 };
 
-			const duplicate = this.order.some((e) => {
-				const weight = e.orderWeight === orderItem.orderWeight;
-				const product = e.product.product === orderItem.product.product;
-				const name = e.productName === orderItem.productName;
-				return name || weight || product;
+			const duplicate = this.showcase.some((e) => {
+				return e.product === orderItem.product;
 			});
 
-			if (!duplicate) this.order.push(orderItem);
+			if (!duplicate) this.showcase.push(orderItem);
 		}
 
 
@@ -159,8 +151,7 @@ export class Game {
 	}
 
 	getOrder(index: number) {
-		// this.order.find((e) => { e.});
-		return this.order[index];
+		return this.showcase[index];
 	}
 
 }
@@ -175,10 +166,11 @@ export interface Product {
 	variants?: Product[];
 };
 
-export interface Order {
-	orderWeight: number;
-	productName: string;
-	product: Product;
+export interface Order extends Product {
+	weight: number;
+	// orderWeight: number;
+	// productName: string;
+	// product: Product;
 	//product id instead of name and such?
 };
 
@@ -200,6 +192,10 @@ export interface OrderData {
  */
 export function rng(max = 1, min = 0): number {
 	return Math.floor(Math.random() * max) + min;
+}
+
+export function shuffle<T>(array: T[]) {
+	return array.sort(() => Math.random() - 0.5);
 }
 
 // function showcase(order: Order[], products:Product[]): Product[] {

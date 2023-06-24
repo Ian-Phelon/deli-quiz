@@ -14,7 +14,7 @@
 	let winning = false;
 	// $: slicing = game.order[slicingIndex];
 	$: canSlice = !order;
-	$: canBag = scale > game.getOrder(slicingIndex).orderWeight || !game.withinTolerance(order?.orderWeight, scale);
+	$: canBag = scale > game.getOrder(slicingIndex).weight || !game.withinTolerance(order?.weight, scale);
 	$: bladeSetting = game.bladeSetting[blade];
 
 	function select(event: Event) {
@@ -24,7 +24,7 @@
 		const index = +str.split('-')[1];
 		game.select();
 		slicingIndex = index;
-		order = game.order[slicingIndex];
+		order = game.showcase[slicingIndex];
 	}
 
 	function slice() {
@@ -38,7 +38,7 @@
 
 	async function bag() {
 		winning = false;
-		const withinTolerance = game.withinTolerance(order?.orderWeight, game.scaleWeight());
+		const withinTolerance = game.withinTolerance(order?.weight, game.scaleWeight());
 		if (withinTolerance) {
 			const bagged = game.bag(slicingIndex);
 			if (!bagged) {
@@ -62,15 +62,15 @@
 	</div>
 {/if}
 <p>
-	Slicing: {order ? `${order.productName + ' ' + order.product.product}` : ''}
+	Slicing: {order ? `${order.producer + ' ' + order.product}` : ''}
 </p>
 <p>Slices: {slices}</p>
 <p>Scale: {scale}</p>
 <div class="slicer">
 	<p class="order">
 		{#each game.order as item, i}
-			<b>{item.orderWeight}</b> of {item.productName}
-			{item.product.product}{i === game.order.length - 1 ? '.' : ', '}
+			<b>{item.weight}</b> of {item.producer}
+			{item.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
 	<button id="slice" on:click={slice} disabled={canSlice}> slice </button>
@@ -91,9 +91,9 @@
 	</p>
 </div>
 <div class="showcase">
-	{#each game.order as item, i}
+	{#each game.showcase as item, i}
 		<button id="select-{i}" on:click={select}
-			>{item.productName + ' ' + item.product.product}</button
+			>{item.producer + ' ' + item.product}</button
 		>
 	{/each}
 </div>
