@@ -6,25 +6,35 @@
 	export let game: Game;
 
 	let slicingIndex = 0;
-	//let productId=0
 	let slices = 0;
 	let blade = 0;
 	let scale = 0;
 	let order: Order;
+	let haha: Order | string | undefined;
 	let winning = false;
-	// $: slicing = game.order[slicingIndex];
 	$: canSlice = !order;
-	$: canBag = scale > game.getOrder(slicingIndex).weight || !game.withinTolerance(order?.weight, scale);
+	$: canBag =
+		scale > game.getOrder(slicingIndex).weight || !game.withinTolerance(order?.weight, scale);
 	$: bladeSetting = game.bladeSetting[blade];
+
+	
 
 	function select(event: Event) {
 		//@ts-expect-error always called with an event
-		const str = event.currentTarget.id;
+		const id = event.currentTarget.id;
 		//
-		const index = +str.split('-')[1];
+		const index = +id.split('-')[1];
 		game.select();
 		slicingIndex = index;
-		order = game.showcase[slicingIndex];
+		if (game.showcase[slicingIndex].weight === 0) {
+			//@ts-expect-error always called with an event
+			event.currentTarget.disabled = true
+		}
+		if (game.showcase[slicingIndex].weight > 0) order = game.showcase[slicingIndex];
+	}
+
+	function isSelectable(weight: number) {
+		return weight > 0;
 	}
 
 	function slice() {
@@ -38,16 +48,9 @@
 
 	async function bag() {
 		winning = false;
-		const withinTolerance = game.withinTolerance(order?.weight, game.scaleWeight());
-		if (withinTolerance) {
-			const bagged = game.bag(slicingIndex);
-			if (!bagged) {
-				console.log('oopsies');
-			}
-		}
-
+		const bagged = game.bag(slicingIndex);
 		await tick();
-		winning = game.order.length === game.cart.length;
+		winning = bagged && game.order.length === game.cart.length;
 	}
 
 	function weigh() {
@@ -92,7 +95,7 @@
 </div>
 <div class="showcase">
 	{#each game.showcase as item, i}
-		<button id="select-{i}" on:click={select}
+		<button id="select-{i}" on:click|preventDefault={select}  
 			>{item.producer + ' ' + item.product}</button
 		>
 	{/each}

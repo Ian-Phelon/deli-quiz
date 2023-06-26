@@ -27,6 +27,9 @@ declare global {
 	interface Number {
 		toFixed3(): number;
 	}
+	interface Array<T>{
+		shuffle():Array<T>;
+	}
 }
 
 export { };

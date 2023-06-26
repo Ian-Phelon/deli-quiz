@@ -77,13 +77,11 @@ export class Game {
 		// }
 
 		if (this.withinTolerance(target, actual)) {
-			console.log('fuckerA');
 			const fulfilled = { ...order, orderWeight: actual };
 			if (this.cart.includes(fulfilled)) {
-				console.log('fuckerB');
+				return false;
 			}
 			this.cart.push(fulfilled);
-			console.log('fuckerC');
 			this.cleanSlicer();
 		} else {
 			return false;
@@ -96,10 +94,10 @@ export class Game {
 		return slices.reduce((n, m) => n + m, 0).toFixed3();
 	}
 
-	withinTolerance(orderWeight: number | undefined, actual: number | undefined) {
-		if (!orderWeight || !actual || actual === 0) return false;
+	withinTolerance(target: number, actual: number) {
+		if (actual === 0) return false;
 
-		const target = orderWeight;
+		// const target = orderWeight;
 		const upper = (target + this.faultTolerance).toFixed3();
 		const lower = (target - this.faultTolerance).toFixed3();
 
@@ -109,8 +107,8 @@ export class Game {
 	// generateOrder(showcase: Product[],) {
 	generateOrder() {
 		// one to four items
-		const amount = rng(4, 1);
-		const stock = amount * 2;
+		const order = rng(4, 1);
+		const stock = order * 2;
 		// const showcase = [];
 
 
@@ -128,7 +126,13 @@ export class Game {
 			if (!duplicate) this.showcase.push(orderItem);
 		}
 
+		for (let i = 0; i < order; i++) {
+			const weights = [...this.orderWeights];
+			this.showcase[i].weight = weights.shuffle().pop() ?? 1;
+			this.order[i] = this.showcase[i];
+		}
 
+		this.showcase.shuffle();
 
 		this.step('order');
 	}
@@ -176,6 +180,10 @@ export interface Order extends Product {
 
 Number.prototype.toFixed3 = function (): number {
 	return Math.round(Number(this) * 1000) / 1000;
+};
+
+Array.prototype.shuffle = function () {
+	return this.sort(() => Math.random() - 0.5);
 };
 
 export interface OrderData {
