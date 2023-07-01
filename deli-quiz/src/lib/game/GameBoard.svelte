@@ -2,39 +2,38 @@
 	import type { Game, Order } from '$lib/game/game';
 	import { confetti } from '@neoconfetti/svelte';
 	import { tick } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 
 	export let game: Game;
 
-	let slicingIndex = 0;
+	let winning = false;
 	let slices = 0;
 	let blade = 0;
 	let scale = 0;
-	let order: Order;
-	let haha: Order | string | undefined;
-	let winning = false;
-	$: canSlice = !order;
-	$: canBag =
-		scale > game.getOrder(slicingIndex).weight || !game.withinTolerance(order?.weight, scale);
+	let slicingIndex = -1;
+	let info = '';
+	$: info = game.orderToString(slicingIndex);
+	$: if (slices > 0) {
+		scale = game.scaleWeight();
+	}
 	$: bladeSetting = game.bladeSetting[blade];
-
-	
-
-	function select(event: Event) {
-		//@ts-expect-error always called with an event
-		const id = event.currentTarget.id;
-		//
-		const index = +id.split('-')[1];
-		game.select();
-		slicingIndex = index;
-		if (game.showcase[slicingIndex].weight === 0) {
-			//@ts-expect-error always called with an event
-			event.currentTarget.disabled = true
-		}
-		if (game.showcase[slicingIndex].weight > 0) order = game.showcase[slicingIndex];
+	$: if (game.cart.length === game.order.length) {
+		winGame();
 	}
 
-	function isSelectable(weight: number) {
-		return weight > 0;
+	function select(event: Event & { currentTarget: EventTarget & HTMLButtonElement }) {
+		const showcaseIndex = +event.currentTarget.id.split('-')[1];
+		const orderIndex = game.selectOrder(showcaseIndex);
+
+		info = game.orderToString(showcaseIndex);
+		if (orderIndex < 0) {
+			const product = game.showcase[showcaseIndex];
+			// info = `${product.producer} ${product.product} was not ordered.`;
+			slicingIndex = -1;
+			event.currentTarget.disabled = true;
+		} else {
+			slicingIndex = showcaseIndex;
+		}
 	}
 
 	function slice() {
@@ -43,19 +42,45 @@
 	}
 
 	function setBlade() {
-		game.setBlade(blade);
+		blade = game.setBlade(blade);
 	}
 
 	async function bag() {
 		winning = false;
-		const bagged = game.bag(slicingIndex);
+		let bagged = false;
+
+		const target = game.showcase[slicingIndex].weight;
+		const actual = game.scaleWeight();
+
+		const withinTolerance = game.withinTolerance(target, actual) || actual >= target;
+
+		if (!withinTolerance) {
+			info = `Not Enough`;
+		}
+
+		bagged = game.bag(slicingIndex);
+
+		if (bagged) {
+			slicingIndex = -1;
+		}
+
 		await tick();
-		winning = bagged && game.order.length === game.cart.length;
+
+		const fulfilled = game.cart.length === game.order.length;
+
+		winning = bagged && fulfilled;
 	}
 
 	function weigh() {
-		game.weigh();
-		scale = game.scaleWeight();
+		scale = game.weigh();
+	}
+
+	const dispatch = createEventDispatcher();
+
+	function winGame() {
+		dispatch('win', {
+			win: true
+		});
 	}
 </script>
 
@@ -64,9 +89,9 @@
 		<div use:confetti />
 	</div>
 {/if}
-<p>
-	Slicing: {order ? `${order.producer + ' ' + order.product}` : ''}
-</p>
+
+<p>{info}</p>
+
 <p>Slices: {slices}</p>
 <p>Scale: {scale}</p>
 <div class="slicer">
@@ -76,9 +101,15 @@
 			{item.product}{i === game.order.length - 1 ? '.' : ', '}
 		{/each}
 	</p>
-	<button id="slice" on:click={slice} disabled={canSlice}> slice </button>
-	<button id="weigh" on:click={weigh}> weigh </button>
-	<button id="bag" disabled={canBag} on:click={bag}> bag </button>
+	<button
+		id="slice"
+		on:click={slice}
+		disabled={slicingIndex === -1 || (blade === 0 && slicingIndex !== -1)}
+	>
+		slice
+	</button>
+	<button id="weigh" on:click={weigh} disabled={slices === 0}> weigh </button>
+	<button id="bag" on:click={bag} disabled={slicingIndex === -1 || slices === 0}> bag </button>
 	<input
 		id="blade"
 		type="range"
@@ -88,14 +119,13 @@
 		on:click={setBlade}
 		on:touchend={setBlade}
 	/>
-	<!-- <Slicer blade={blade} game={game}/> -->
 	<p>
 		{bladeSetting}
 	</p>
 </div>
 <div class="showcase">
 	{#each game.showcase as item, i}
-		<button id="select-{i}" on:click|preventDefault={select}  
+		<button id="select-{i}" on:click|preventDefault={select}
 			>{item.producer + ' ' + item.product}</button
 		>
 	{/each}

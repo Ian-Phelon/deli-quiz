@@ -19,7 +19,8 @@
 			products: generic,
 			productNames: names,
 			orderWeights: weights,
-			faultTolerance: 0.05
+			faultTolerance: 0.05,
+			sliceIncrement: 0.004
 		};
 	}
 
@@ -28,9 +29,13 @@
 	let game = new Game(gameData);
 
 	let inProgress = false;
+	let retry = false;
 
 	function start() {
 		inProgress = !inProgress;
+	}
+	function winning(event:Event){
+		// retry = event.detail.win
 	}
 </script>
 
@@ -45,9 +50,12 @@
 <h1 class="welcome">Deli Quiz</h1>
 <section class="game">
 	{#if inProgress}
-		<GameBoard {game} />
+		<GameBoard {game} on:win={winning}/>
 	{:else}
 		<button on:click={start}>Start</button>
+	{/if}
+	{#if retry}
+		<button on:click={start}>retry</button>
 	{/if}
 </section>
 
